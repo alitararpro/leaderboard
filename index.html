@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Leaderboard Dashboard (Save Button)</title>
+  <style>
+    :root{
+      --bg:#111;
+      --card:#232323;
+      --muted:#bdbdbd;
+      --accent:#f44336;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background:var(--bg);
+      color:#fff;
+      display:flex;
+      justify-content:center;
+      padding:20px;
+    }
+
+    .container{
+      width:100%;
+      max-width:560px;
+      background:linear-gradient(180deg,#262626 0%, #1f1f1f 100%);
+      border-radius:12px;
+      padding:18px;
+      box-shadow:0 8px 30px rgba(0,0,0,0.6);
+      border:1px solid rgba(255,255,255,0.03);
+    }
+
+    .top-row{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+    }
+
+    .logo {
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .logo img{ width:130px; height:auto; object-fit:contain; border-radius:6px; }
+
+    h2{ margin:6px 0 0; font-size:20px; color:var(--accent); }
+
+    .controls {
+      display:flex;
+      gap:10px;
+      align-items:center;
+      margin:14px 0;
+    }
+
+    select{
+      padding:10px 12px;
+      font-size:18px;
+      border-radius:8px;
+      border:none;
+      background:#333;
+      color:#fff;
+      font-weight:600;
+      appearance:none;
+      min-width:220px;
+    }
+
+    .buttons {
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+
+    .btn {
+      padding:10px 14px;
+      border-radius:8px;
+      border:none;
+      font-weight:700;
+      cursor:pointer;
+      font-size:15px;
+    }
+
+    .btn-save { background:#2e7d32; color:#fff; }        /* green save */
+    .btn-reset{ background:#b71c1c; color:#fff; }        /* red reset */
+    .btn-small { background:transparent; color:var(--muted); border:1px solid rgba(255,255,255,0.04); padding:8px 10px; border-radius:8px; }
+
+    .status {
+      font-size:13px;
+      color:#ffd54f;
+      margin-left:6px;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:6px;
+    }
+
+    thead th{
+      text-align:left;
+      font-size:13px;
+      color:var(--muted);
+      padding:10px 8px;
+      border-bottom:1px solid rgba(255,255,255,0.04);
+    }
+
+    tbody tr{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      padding:10px 8px;
+      border-bottom:1px solid rgba(255,255,255,0.02);
+    }
+
+    .cell-rank{ width:40px; text-align:center; font-weight:700; font-size:18px; color:#ddd; }
+    .cell-member{ flex:1; display:flex; gap:12px; align-items:center; min-width:0; }
+    .member-img{ width:68px; height:68px; border-radius:8px; object-fit:cover; flex-shrink:0; }
+    .member-name{ font-size:20px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .cell-points{ width:85px; text-align:center; font-weight:800; font-size:18px; color:#fff; }
+    .cell-actions{ width:120px; text-align:center; display:flex; justify-content:center; gap:10px; }
+
+    /* plus/minus styling (only symbol colored, no circle) */
+    .action-btn{
+      background:transparent;
+      border:none;
+      font-size:30px;
+      cursor:pointer;
+      font-weight:800;
+      padding:6px;
+      line-height:1;
+      width:40px;
+      height:40px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .action-plus{ color:#3ad55a; }     /* green */
+    .action-minus{ color:#ff5c5c; }    /* red */
+
+    .footer{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-top:14px;
+      gap:12px;
+    }
+
+    .total {
+      font-weight:800;
+      font-size:16px;
+      color:#fff;
+    }
+
+    .msg {
+      color:#a7ffeb;
+      font-size:13px;
+      opacity:0.95;
+    }
+
+    /* responsive */
+    @media (max-width:520px){
+      .member-img{ width:56px; height:56px; }
+      .member-name{ font-size:18px; }
+      .cell-points{ width:72px; font-size:16px; }
+      .action-btn{ font-size:26px; width:36px; height:36px; }
+      select{ min-width:160px; font-size:16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="top-row">
+      <div class="logo">
+        <img src="logo.jpg" alt="Logo (replace logo.jpg)" onerror="this.style.opacity=0.6">
+        <div>
+          <h2>Update Leaderboard Data</h2>
+          <div style="color:var(--muted); font-size:13px;">Car showroom — rank by points</div>
+        </div>
+      </div>
+
+      <div style="text-align:right">
+        <div style="font-size:13px; color:var(--muted)">Built quick</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <select id="leaderSelect"></select>
+
+      <div class="buttons" style="margin-left:auto;">
+        <button class="btn btn-small" id="unsavedIndicator" style="display:none">Unsaved changes</button>
+        <button class="btn btn-save" id="saveBtn">Save</button>
+        <button class="btn btn-reset" id="resetBtn">Reset to defaults</button>
+      </div>
+    </div>
+
+    <table aria-label="leaderboard" id="leaderboardTable">
+      <!-- header + rows injected by JS -->
+    </table>
+
+    <div class="footer">
+      <div class="total">Total Points: <span id="totalPoints">0</span></div>
+      <div class="msg" id="message" style="opacity:0"></div>
+    </div>
+  </div>
+
+  <script>
+    // === Default team data (replace images with your files) ===
+    const defaultTeams = {
+      moin: [
+        { name: "Saad", points: 40, img: "saad.jpeg" },
+        { name: "Talha", points: 32, img: "talha.jpeg" },
+        { name: "Jawadi", points: 28, img: "jawadi.jpeg" },
+        { name: "Hamza", points: 21, img: "hamza.jpeg" },
+        { name: "Tabi", points: 15, img: "tabi.jpeg" },
+        { name: "Abdullah", points: 12, img: "abdullah.jpeg" },
+        { name: "Moin", points: 10, img: "moin.jpeg" },
+        { name: "Usman", points: 8, img: "usman.jpeg" }
+      ],
+      dilawar: [
+        { name: "Waleed", points: 50, img: "waleed.jpeg" },
+        { name: "Faisal", points: 43, img: "faisal.jpeg" },
+        { name: "Asif", points: 37, img: "asif.jpeg" },
+        { name: "Waheed", points: 29, img: "waheed.jpeg" },
+        { name: "Rehmat", points: 22, img: "rahmat.jpeg" },
+        { name: "Nomi", points: 18, img: "nomi.jpeg" },
+        { name: "Wali", points: 14, img: "wali.jpeg" },
+        { name: "Adeel", points: 9, img: "adeel.jpeg" }
+      ]
+    };
+
+    // deep-clone helper
+    function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
+
+    // Load saved teams if present, otherwise copy defaults
+    let teams = (function(){
+      try {
+        const raw = localStorage.getItem('teamsData');
+        return raw ? JSON.parse(raw) : deepClone(defaultTeams);
+      } catch(e) {
+        return deepClone(defaultTeams);
+      }
+    })();
+
+    // UI state
+    let currentLeader = 'dilawar';
+    let unsaved = false;
+
+    // DOM refs
+    const leaderSelect = document.getElementById('leaderSelect');
+    const leaderboardTable = document.getElementById('leaderboardTable');
+    const totalPointsEl = document.getElementById('totalPoints');
+    const saveBtn = document.getElementById('saveBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const msgEl = document.getElementById('message');
+    const unsavedIndicator = document.getElementById('unsavedIndicator');
+
+    // populate leader select
+    function populateLeaderOptions(){
+      leaderSelect.innerHTML = '';
+      Object.keys(teams).forEach(key => {
+        const label = key === 'dilawar' ? 'Leader: Dilawar' : 'Leader: Moin';
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = label;
+        leaderSelect.appendChild(opt);
+      });
+      // try to keep previously selected leader from localStorage if exists
+      const savedLeader = localStorage.getItem('currentLeader');
+      if (savedLeader && teams[savedLeader]) currentLeader = savedLeader;
+      leaderSelect.value = currentLeader;
+    }
+
+    function renderBoard(){
+  if(!teams[currentLeader]) {
+    currentLeader = Object.keys(teams)[0];
+    leaderSelect.value = currentLeader;
+  }
+
+  teams[currentLeader].sort((a,b) => b.points - a.points);
+
+  let html = `
+    <thead>
+      <tr>
+        <th style="width:40px"></th>
+        <th style="flex:1"></th>
+        <th style="width:85px; text-align:center">Points</th>
+        <th style="width:120px"></th>
+      </tr>
+    </thead>
+    <tbody>
+  `;
+
+  let total = 0;
+  teams[currentLeader].forEach((member, idx) => {
+    total += member.points;
+    const imgSrc = member.img || 'placeholder.png';
+    html += `
+      <tr>
+        <td class="cell-rank">${idx+1}</td>
+        <td class="cell-member">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <img class="member-img" src="${imgSrc}" alt="${member.name}" onerror="this.style.opacity=0.5">
+            <div class="member-name">${member.name}</div>
+          </div>
+        </td>
+        <td class="cell-points">${member.points}</td>
+        <td class="cell-actions">
+          <button class="action-btn action-minus" data-name="${member.name}">−</button>
+          <button class="action-btn action-plus"  data-name="${member.name}">+</button>
+        </td>
+      </tr>
+    `;
+  });
+
+  html += `</tbody>`;
+  leaderboardTable.innerHTML = html;
+  totalPointsEl.textContent = total;
+  localStorage.setItem('currentLeader', currentLeader);
+
+  // attach event listeners to each button
+  leaderboardTable.querySelectorAll('.action-minus').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      updatePoints(currentLeader, btn.dataset.name, -1);
+    });
+  });
+  leaderboardTable.querySelectorAll('.action-plus').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      updatePoints(currentLeader, btn.dataset.name, 1);
+    });
+  });
+}
+
+    // called when plus/minus clicked
+    function updatePoints(leaderKey, memberName, change){
+      const team = teams[leaderKey];
+      if(!team) return;
+      const member = team.find(m => m.name === memberName);
+      if(!member) return;
+      member.points = Number(member.points) + Number(change);
+      unsaved = true;
+      showUnsaved(true);
+      renderBoard();
+    }
+
+    // Save to localStorage (explicitly by user)
+    function saveData(){
+      try {
+        localStorage.setItem('teamsData', JSON.stringify(teams));
+        unsaved = false;
+        showUnsaved(false);
+        showMessage('Saved ✅');
+      } catch(e){
+        showMessage('Save failed — check browser storage settings', true);
+      }
+    }
+
+    // Reset to defaults (and remove saved data)
+    function resetToDefaults(){
+      if(!confirm('Reset all scores to default values? This will remove any saved data.')) return;
+      teams = deepClone(defaultTeams);
+      localStorage.removeItem('teamsData');
+      unsaved = false;
+      showUnsaved(false);
+      renderBoard();
+      showMessage('Reset to defaults');
+    }
+
+    // UI helpers
+    function showMessage(text, isError=false){
+      msgEl.style.opacity = 1;
+      msgEl.style.color = isError ? '#ffb4b4' : '#a7ffeb';
+      msgEl.textContent = text;
+      setTimeout(()=>{ msgEl.style.opacity = 0; }, 1800);
+    }
+
+    function showUnsaved(state){
+      if(state){
+        unsavedIndicator.style.display = 'inline-block';
+        unsavedIndicator.textContent = 'Unsaved changes';
+        saveBtn.disabled = false;
+      } else {
+        unsavedIndicator.style.display = 'none';
+      }
+    }
+
+    // event handlers
+    leaderSelect.addEventListener('change', () => {
+      currentLeader = leaderSelect.value;
+      renderBoard();
+    });
+
+    saveBtn.addEventListener('click', () => {
+      saveData();
+    });
+
+    resetBtn.addEventListener('click', () => {
+      resetToDefaults();
+    });
+
+    // initial setup
+    populateLeaderOptions();
+    renderBoard();
+
+    // expose updatePoints for inline onclick
+    window.updatePoints = updatePoints;
+    window.renderBoard = renderBoard;
+    window.saveData = saveData;
+    window.resetToDefaults = resetToDefaults;
+  </script>
+</body>
+</html>
